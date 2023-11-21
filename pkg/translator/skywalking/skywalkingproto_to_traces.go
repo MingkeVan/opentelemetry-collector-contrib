@@ -6,6 +6,7 @@ package skywalking // import "github.com/open-telemetry/opentelemetry-collector-
 import (
 	"bytes"
 	"encoding/hex"
+	"log"
 	"reflect"
 	"strconv"
 	"time"
@@ -27,6 +28,7 @@ const (
 	AttributeSkywalkingSpanID          = "sw8.span_id"
 	AttributeSkywalkingTraceID         = "sw8.trace_id"
 	AttributeSkywalkingSegmentID       = "sw8.segment_id"
+	AttributeSkywalkingComponentID     = "sw8.component_id"
 	AttributeSkywalkingParentSpanID    = "sw8.parent_span_id"
 	AttributeSkywalkingParentSegmentID = "sw8.parent_segment_id"
 	AttributeNetworkAddressUsedAtPeer  = "network.AddressUsedAtPeer"
@@ -83,6 +85,8 @@ func swTagsToInternalResource(span *agentV3.SpanObject, dest pcommon.Resource) {
 		otKey, ok := otSpanTagsMapping[tag.Key]
 		if ok {
 			attrs.PutStr(otKey, tag.Value)
+		} else {
+			log.Printf("unkhown span tag %s (%s)", tag.Key, tag.Value)
 		}
 	}
 }
@@ -128,6 +132,7 @@ func swSpanToSpan(traceID string, segmentID string, span *agentV3.SpanObject, de
 		attrs.Clear()
 	}
 
+	attrs.PutInt(AttributeSkywalkingComponentID, int64(span.GetComponentId()))
 	attrs.PutStr(AttributeSkywalkingSegmentID, segmentID)
 	setSwSpanIDToAttributes(span, attrs)
 	setInternalSpanStatus(span, dest.Status())
